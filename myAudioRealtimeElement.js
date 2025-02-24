@@ -175,18 +175,18 @@ class MyAudioRealtimeElement extends HTMLElement {
 
   // Retrieve the ephemeral key using an injected function or a fallback HTTP call.
   async requestEphemeralKey() {
-    if (this.ephemeralKeyFunction) {
-      return await this.ephemeralKeyFunction();
-    }
-    // Use GET as a fallback.
-    const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey', {
-      method: "GET"
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.statusText}`);
-    }
-    return await response.json();
+  if (this.ephemeralKeyFunction) {
+    return await this.ephemeralKeyFunction();
   }
+  // Adjust the URL to include the file name if needed:
+  const response = await fetch('https://www.backagain.io/_functions/http-functions.js/get_ephemeralKey', {
+    method: "GET"
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.statusText}`);
+  }
+  return await response.json();
+}
 
   // Append transcription text to the transcript display.
   updateTranscript(text) {
