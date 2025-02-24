@@ -8,6 +8,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     this.ephemeralKeyFunction = null;
     this.apiEndpoint = "https://api.openai.com/v1/realtime"; // default
     this.modelId = "gpt-4o-realtime-preview-2024-12-17";       // default
+    this.localStream = null;
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -35,8 +36,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     btn.addEventListener('click', () => this.startRealtime());
   }
 
-  // This method allows a parent (if used) to inject an ephemeral key function.
-  // For a self-contained approach, you can simply not inject one.
+  // Allow the parent to inject an ephemeral key function.
   setEphemeralKeyFunction(fn) {
     if (typeof fn === 'function') {
       this.ephemeralKeyFunction = fn;
@@ -51,8 +51,20 @@ class MyAudioRealtimeElement extends HTMLElement {
     const errEl = this.shadowRoot.querySelector('#err');
 
     try {
-      // 1) Request ephemeral key using the provided function or the fallback.
-      const ephemeralData = await this.requestEphemeralKey();
+      // Begin capturing audio immediately.
+      logEl.textContent += 'Requesting audio stream...\n';
+      const audioPromise = navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Also, request the ephemeral key concurrently.
+      const ephemeralPromise = this.requestEphemeralKey();
+
+      // Wait for audio stream.
+      const stream = await audioPromise;
+      this.localStream = stream;
+      logEl.textContent += 'Got user audio stream\n';
+
+      // Wait for ephemeral key.
+      const ephemeralData = await ephemeralPromise;
       if (ephemeralData.error) {
         errEl.textContent = `Failed ephemeral key: ${ephemeralData.error}`;
         return;
@@ -60,17 +72,11 @@ class MyAudioRealtimeElement extends HTMLElement {
       const ephemeralKey = ephemeralData.client_secret.value;
       logEl.textContent += 'Got ephemeral key\n';
 
-      // 2) Capture local audio
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      logEl.textContent += 'Got user audio stream\n';
-
-      // 3) Create RTCPeerConnection
+      // Create RTCPeerConnection.
       const pc = new RTCPeerConnection();
-
-      // 4) Add local audio track
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-      // 5) Handle remote track (model’s audio)
+      // When receiving remote audio, attach it.
       pc.ontrack = (event) => {
         logEl.textContent += 'Received remote track from model\n';
         const audioEl = document.createElement('audio');
@@ -79,19 +85,19 @@ class MyAudioRealtimeElement extends HTMLElement {
         this.shadowRoot.appendChild(audioEl);
       };
 
-      // 6) Create a data channel (optional)
+      // Create a data channel (optional).
       const dc = pc.createDataChannel("oai-events");
       dc.onopen = () => logEl.textContent += 'Data channel open with AI\n';
       dc.onmessage = (e) => {
         logEl.textContent += 'AI event: ' + e.data + '\n';
       };
 
-      // 7) Create SDP offer
+      // Create SDP offer.
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       logEl.textContent += 'Created SDP offer\n';
 
-      // 8) Send the offer to OpenAI Realtime using the ephemeral key.
+      // Send the offer to OpenAI Realtime using the ephemeral key.
       const sdpResponse = await fetch(`${this.apiEndpoint}?model=${this.modelId}`, {
         method: "POST",
         headers: {
@@ -107,7 +113,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       const answerSdp = await sdpResponse.text();
       logEl.textContent += 'Received answer SDP\n';
 
-      // 9) Set the remote description
+      // Set remote description.
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
       logEl.textContent += 'Connected to OpenAI Realtime!\n';
     } catch (err) {
@@ -117,11 +123,10 @@ class MyAudioRealtimeElement extends HTMLElement {
   }
 
   async requestEphemeralKey() {
-    // If a function was injected, use it.
     if (this.ephemeralKeyFunction) {
       return await this.ephemeralKeyFunction();
     }
-    // Otherwise, use the fallback: call an HTTP endpoint (which you set up in Wix)
+    // Fallback: call an HTTP endpoint for the ephemeral key.
     const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey');
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.statusText}`);
