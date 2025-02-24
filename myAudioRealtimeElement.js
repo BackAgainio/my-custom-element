@@ -9,7 +9,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     this.apiEndpoint = "https://api.openai.com/v1/realtime"; // default endpoint
     this.modelId = "gpt-4o-realtime-preview-2024-12-17";       // default model
     this.localStream = null; // will hold the audio stream
-    this.pc = null;        // will hold the RTCPeerConnection instance
+    this.pc = null;        // RTCPeerConnection instance
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -37,7 +37,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       <div class="log" id="logArea"></div>
       <div id="transcript"></div>
     `;
-
+    
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
     connectBtn.addEventListener('click', () => this.handleClick());
 
@@ -48,7 +48,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     cancelBtn.addEventListener('click', () => this.cancelChat());
   }
 
-  // Allow injection of an ephemeral key function (if desired).
+  // Allow injection of an ephemeral key function from the parent (if desired).
   setEphemeralKeyFunction(fn) {
     if (typeof fn === 'function') {
       this.ephemeralKeyFunction = fn;
@@ -58,7 +58,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     }
   }
 
-  // Button click handler: capture audio first, then initiate the RTC handshake.
+  // The button click handler: first capture audio, then start the RTC handshake.
   async handleClick() {
     const errEl = this.shadowRoot.querySelector('#err');
     errEl.textContent = '';
@@ -71,7 +71,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     }
   }
 
-  // Capture local audio (the proven simple code).
+  // Function to capture local audio.
   async getAudioAccess() {
     const logEl = this.shadowRoot.querySelector('#logArea');
     const errEl = this.shadowRoot.querySelector('#err');
@@ -81,7 +81,7 @@ class MyAudioRealtimeElement extends HTMLElement {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.localStream = stream;
         logEl.textContent += 'Got audio stream successfully.\n';
-        // Optionally attach an audio element so the user can hear their input.
+        // Attach an audio element so the user can hear their input.
         const audioEl = document.createElement('audio');
         audioEl.autoplay = true;
         audioEl.srcObject = stream;
@@ -119,7 +119,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       this.pc = new RTCPeerConnection();
       this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
 
-      // When receiving remote audio, attach it.
+      // Handle remote track (model’s audio).
       this.pc.ontrack = (event) => {
         logEl.textContent += 'Received remote track from model\n';
         const audioEl = document.createElement('audio');
@@ -128,14 +128,13 @@ class MyAudioRealtimeElement extends HTMLElement {
         this.shadowRoot.appendChild(audioEl);
       };
 
-      // Create a data channel for receiving events.
+      // Create a data channel for events.
       const dc = this.pc.createDataChannel("oai-events");
       dc.onopen = () => logEl.textContent += 'Data channel open with AI\n';
       dc.onmessage = (e) => {
         try {
           const event = JSON.parse(e.data);
           logEl.textContent += `Data channel event: ${event.type}\n`;
-          // If it's a transcription delta, update the transcript.
           if (event.type === "response.text.delta" && event.delta) {
             this.updateTranscript(event.delta);
           }
@@ -179,9 +178,9 @@ class MyAudioRealtimeElement extends HTMLElement {
     if (this.ephemeralKeyFunction) {
       return await this.ephemeralKeyFunction();
     }
-    // Use POST for the fallback call to ensure consistency with the HTTP function.
-    const response = await fetch('https://www.backagain.io/_functions/use_get_ephemeralKey', {
-      method: "POST"
+    // Use GET as a fallback.
+    const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey', {
+      method: "GET"
     });
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.statusText}`);
@@ -230,6 +229,7 @@ class MyAudioRealtimeElement extends HTMLElement {
 }
 
 customElements.define('my-audio-rt-element', MyAudioRealtimeElement);
+
 
 
 
