@@ -180,7 +180,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       return await this.ephemeralKeyFunction();
     }
     // Use POST for the fallback call to ensure consistency with the HTTP function.
-    const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey', {
+    const response = await fetch('https://www.backagain.io/_functions/use_get_ephemeralKey', {
       method: "POST"
     });
     if (!response.ok) {
