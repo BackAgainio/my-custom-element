@@ -178,8 +178,8 @@ class MyAudioRealtimeElement extends HTMLElement {
   if (this.ephemeralKeyFunction) {
     return await this.ephemeralKeyFunction();
   }
-  // Adjust the URL to include the file name if needed:
-  const response = await fetch('https://www.backagain.io/_functions/http-functions.js/get_ephemeralKey', {
+  // Use the standard Wix HTTP function endpoint format.
+  const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey', {
     method: "GET"
   });
   if (!response.ok) {
