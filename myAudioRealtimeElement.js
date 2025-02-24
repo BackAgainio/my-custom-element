@@ -1,7 +1,21 @@
 class MyAudioRealtimeElement extends HTMLElement {
+  static get observedAttributes() {
+    return ['data-api-endpoint', 'data-model-id'];
+  }
+
   constructor() {
     super();
-    this.ephemeralKeyData = null;
+    this.ephemeralKeyFunction = null;
+    this.apiEndpoint = "https://api.openai.com/v1/realtime"; // default
+    this.modelId = "gpt-4o-realtime-preview-2024-12-17";       // default
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'data-api-endpoint') {
+      this.apiEndpoint = newValue;
+    } else if (name === 'data-model-id') {
+      this.modelId = newValue;
+    }
   }
 
   connectedCallback() {
@@ -18,114 +32,79 @@ class MyAudioRealtimeElement extends HTMLElement {
     `;
     
     const btn = this.shadowRoot.querySelector('#connectBtn');
-    btn.addEventListener('click', () => {
-      // Start audio capture immediately.
-      this.getAudioAccess();
-      // Send a message to the parent window requesting an ephemeral key.
-      window.parent.postMessage({ type: 'REQUEST_EPHEMERAL_KEY' }, '*');
-    });
-
-    // Listen for a response from the parent with the ephemeral key.
-    window.addEventListener('message', (event) => {
-      // Optionally, check event.origin for security.
-      if (event.data && event.data.type === 'EPHEMERAL_KEY') {
-        this.ephemeralKeyData = event.data.key;
-        this.log('Ephemeral key received.');
-        this.startRealtime();
-      }
-    });
+    btn.addEventListener('click', () => this.startRealtime());
   }
 
-  log(msg) {
-    const logEl = this.shadowRoot.querySelector('#logArea');
-    logEl.textContent += msg + '\n';
-  }
-
-  getAudioAccess() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        this.log('Got audio stream.');
-        // Attach audio stream to an audio element so the user can hear it.
-        const audioEl = document.createElement('audio');
-        audioEl.autoplay = true;
-        audioEl.srcObject = stream;
-        this.shadowRoot.appendChild(audioEl);
-        // You might want to store the stream for later use.
-        this.localStream = stream;
-      })
-      .catch(err => {
-        const errEl = this.shadowRoot.querySelector('#err');
-        errEl.textContent = 'Audio error: ' + err.message;
-        console.error(err);
-      });
-  }
-
+  // ... (rest of your code remains the same, but when making the API call, use this.apiEndpoint and this.modelId)
+  
   async startRealtime() {
-    if (!this.ephemeralKeyData) {
-      const errEl = this.shadowRoot.querySelector('#err');
-      errEl.textContent = 'Ephemeral key data not set.';
-      return;
-    }
-    this.log('Starting RealTime connection...');
+    const logEl = this.shadowRoot.querySelector('#logArea');
+    const errEl = this.shadowRoot.querySelector('#err');
+
     try {
-      // Create RTCPeerConnection.
-      const pc = new RTCPeerConnection();
-
-      // Add local audio track from previously captured stream.
-      if (!this.localStream) {
-        throw new Error("Local audio stream not available.");
+      if (!this.ephemeralKeyFunction) {
+        throw new Error("Ephemeral key function is not set on this element.");
       }
-      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
+      const ephemeralData = await this.ephemeralKeyFunction();
+      if (ephemeralData.error) {
+        errEl.textContent = `Failed ephemeral key: ${ephemeralData.error}`;
+        return;
+      }
+      const ephemeralKey = ephemeralData.client_secret.value;
+      logEl.textContent += 'Got ephemeral key\n';
 
-      // Handle remote audio.
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      logEl.textContent += 'Got user audio stream\n';
+
+      const pc = new RTCPeerConnection();
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
       pc.ontrack = (event) => {
-        this.log('Received remote track from model.');
+        logEl.textContent += 'Received remote track from model\n';
         const audioEl = document.createElement('audio');
         audioEl.autoplay = true;
         audioEl.srcObject = event.streams[0];
         this.shadowRoot.appendChild(audioEl);
       };
 
-      // Create data channel (optional).
       const dc = pc.createDataChannel("oai-events");
-      dc.onopen = () => this.log('Data channel open with AI.');
-      dc.onmessage = (e) => this.log('AI event: ' + e.data);
+      dc.onopen = () => logEl.textContent += 'Data channel open with AI\n';
+      dc.onmessage = (e) => {
+        logEl.textContent += 'AI event: ' + e.data + '\n';
+      };
 
-      // Create SDP offer.
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      this.log('Created SDP offer.');
+      logEl.textContent += 'Created SDP offer\n';
 
-      // Send offer to OpenAI Realtime using ephemeral key.
-      const baseUrl = "https://api.openai.com/v1/realtime";
-      const modelId = "gpt-4o-realtime-preview-2024-12-17";
-      const sdpResponse = await fetch(`${baseUrl}?model=${modelId}`, {
+      const sdpResponse = await fetch(`${this.apiEndpoint}?model=${this.modelId}`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.ephemeralKeyData.client_secret.value}`,
+          "Authorization": `Bearer ${ephemeralKey}`,
           "Content-Type": "application/sdp"
         },
         body: offer.sdp
       });
       if (!sdpResponse.ok) {
-        const errEl = this.shadowRoot.querySelector('#err');
         errEl.textContent = `Failed to get answer SDP: ${sdpResponse.status} - ${sdpResponse.statusText}`;
         return;
       }
       const answerSdp = await sdpResponse.text();
-      this.log('Received answer SDP.');
+      logEl.textContent += 'Received answer SDP\n';
 
-      // Set remote description.
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
-      this.log('Connected to OpenAI Realtime!');
+      logEl.textContent += 'Connected to OpenAI Realtime!\n';
     } catch (err) {
-      const errEl = this.shadowRoot.querySelector('#err');
       errEl.textContent = `Realtime error: ${err.name} - ${err.message}`;
       console.error(err);
     }
   }
+
+  async requestEphemeralKey() {
+    return await this.ephemeralKeyFunction();
+  }
 }
 
 customElements.define('my-audio-rt-element', MyAudioRealtimeElement);
+
 
 
