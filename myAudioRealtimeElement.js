@@ -122,7 +122,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       return await this.ephemeralKeyFunction();
     }
     // Otherwise, use the fallback: call an HTTP endpoint (which you set up in Wix)
-    const response = await fetch('https://www.backagain.io/_functions/ephemeral-http/get_ephemeralKey');
+    const response = await fetch('https://www.backagain.io/_functions/get_ephemeralKey');
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.statusText}`);
     }
