@@ -34,15 +34,21 @@ class MyAudioRealtimeElement extends HTMLElement {
 
     .button-container {
       display: flex;
-      flex-direction: column; /* Stack buttons vertically */
+      flex-direction: column;
       align-items: center;
-      gap: 20px; /* Space between buttons */
+      gap: 40px; /* Vertical spacing between rows */
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      width: 440px; /* Ensures buttons are evenly spaced */
     }
 
     button {
       width: 200px;
       height: 50px;
-      background-color: rgba(255, 255, 255, 0.8); /* 80% opacity */
+      background-color: rgba(255, 255, 255, 0.6); /* 60% opacity */
       color: #1010AD;
       border: 2px solid #FFFFFF; /* White border */
       border-radius: 20px; /* Rounded corners */
@@ -77,16 +83,16 @@ class MyAudioRealtimeElement extends HTMLElement {
 
   <div class="button-container">
     <button id="connectBtn">Start Conversation</button>
-    <button id="muteBtn">Mute Conversation</button>
-    <button id="cancelBtn">End Conversation</button>
+    <div class="button-row">
+      <button id="muteBtn">Mute Conversation</button>
+      <button id="cancelBtn">End Conversation</button>
+    </div>
   </div>
 
   <div id="err"></div>
   <div class="log" id="logArea"></div>
   <div id="transcript"></div>
 `;
-
-
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
     connectBtn.addEventListener('click', () => this.handleClick());
