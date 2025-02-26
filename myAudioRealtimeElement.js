@@ -23,20 +23,64 @@ class MyAudioRealtimeElement extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.innerHTML = `
-      <style>
-        button { margin-bottom: 0.5em; margin-right: 0.5em; }
-        #err { color: red; margin-top: 0.5em; }
-        .log, #transcript { max-height: 6em; overflow: auto; font-size: 0.8em; background: #eee; padding: 4px; margin-top: 0.5em; }
-      </style>
-      <div>
-        <button id="connectBtn">Connect &amp; Stream to OpenAI</button>
-        <button id="muteBtn">Mute</button>
-        <button id="cancelBtn">Cancel Chat</button>
-      </div>
-      <div id="err"></div>
-      <div class="log" id="logArea"></div>
-      <div id="transcript"></div>
-    `;
+  <style>
+    :host {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      font-family: "Wix Madefor Text", sans-serif;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+      width: 200px;
+      height: 50px;
+      background-color: #FFFFFF;
+      color: #1010AD;
+      border: 2px solid #1010AD;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px;
+      font-family: "Wix Madefor Text", sans-serif;
+    }
+
+    button:hover {
+      background-color: #1010AD;
+      color: #FFFFFF;
+    }
+
+    #err {
+      color: red;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .log, #transcript {
+      max-height: 6em;
+      overflow: auto;
+      font-size: 0.8em;
+      background: #eee;
+      padding: 4px;
+      margin-top: 10px;
+    }
+  </style>
+
+  <div>
+    <button id="connectBtn">Start Conversation</button>
+    <button id="muteBtn">Mute Conversation</button>
+    <button id="cancelBtn">End Conversation</button>
+  </div>
+
+  <div id="err"></div>
+  <div class="log" id="logArea"></div>
+  <div id="transcript"></div>
+`;
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
     connectBtn.addEventListener('click', () => this.handleClick());
