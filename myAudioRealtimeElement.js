@@ -69,6 +69,7 @@ this.shadowRoot.innerHTML = `
       color: red;
       margin-top: 10px;
       font-size: 14px;
+      display: none; /* Hidden from view */
     }
 
     .log, #transcript {
@@ -78,6 +79,7 @@ this.shadowRoot.innerHTML = `
       background: #eee;
       padding: 4px;
       margin-top: 10px;
+      display: none; /* Hidden from view */
     }
   </style>
 
