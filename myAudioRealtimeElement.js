@@ -88,10 +88,6 @@ class MyAudioRealtimeElement extends HTMLElement {
       <button id="cancelBtn">End Conversation</button>
     </div>
   </div>
-
-  <div id="err"></div>
-  <div class="log" id="logArea"></div>
-  <div id="transcript"></div>
 `;
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
