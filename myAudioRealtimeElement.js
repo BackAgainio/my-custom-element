@@ -26,28 +26,29 @@ class MyAudioRealtimeElement extends HTMLElement {
   <style>
     :host {
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
       font-family: "Wix Madefor Text", sans-serif;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .button-container {
+      display: flex;
+      gap: 40px; /* 40px spacing between buttons */
     }
 
     button {
       width: 200px;
       height: 50px;
-      background-color: #FFFFFF;
+      background-color: rgba(255, 255, 255, 0.8); /* 80% opacity */
       color: #1010AD;
       border: 2px solid #1010AD;
       border-radius: 12px;
       font-size: 16px;
-      font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-      margin: 10px;
       font-family: "Wix Madefor Text", sans-serif;
+      font-weight: normal; /* Remove bold */
     }
 
     button:hover {
@@ -71,7 +72,7 @@ class MyAudioRealtimeElement extends HTMLElement {
     }
   </style>
 
-  <div>
+  <div class="button-container">
     <button id="connectBtn">Start Conversation</button>
     <button id="muteBtn">Mute Conversation</button>
     <button id="cancelBtn">End Conversation</button>
@@ -81,6 +82,7 @@ class MyAudioRealtimeElement extends HTMLElement {
   <div class="log" id="logArea"></div>
   <div id="transcript"></div>
 `;
+
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
     connectBtn.addEventListener('click', () => this.handleClick());
