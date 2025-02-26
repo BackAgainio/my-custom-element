@@ -34,7 +34,9 @@ class MyAudioRealtimeElement extends HTMLElement {
 
     .button-container {
       display: flex;
-      gap: 40px; /* 40px spacing between buttons */
+      flex-direction: column; /* Stack buttons vertically */
+      align-items: center;
+      gap: 20px; /* Space between buttons */
     }
 
     button {
@@ -42,13 +44,14 @@ class MyAudioRealtimeElement extends HTMLElement {
       height: 50px;
       background-color: rgba(255, 255, 255, 0.8); /* 80% opacity */
       color: #1010AD;
-      border: 2px solid #1010AD;
-      border-radius: 12px;
+      border: 2px solid #FFFFFF; /* White border */
+      border-radius: 20px; /* Rounded corners */
       font-size: 16px;
       cursor: pointer;
       transition: all 0.3s ease;
       font-family: "Wix Madefor Text", sans-serif;
-      font-weight: normal; /* Remove bold */
+      font-weight: normal; /* No bold */
+      box-shadow: 1px 1px 4px #FFFFFF; /* White shadow */
     }
 
     button:hover {
@@ -82,6 +85,7 @@ class MyAudioRealtimeElement extends HTMLElement {
   <div class="log" id="logArea"></div>
   <div id="transcript"></div>
 `;
+
 
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
