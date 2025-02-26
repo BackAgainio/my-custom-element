@@ -36,7 +36,7 @@ class MyAudioRealtimeElement extends HTMLElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 40px; /* Vertical spacing between rows */
+      gap: 40px; /* Vertical spacing */
     }
 
     .button-row {
@@ -71,27 +71,36 @@ class MyAudioRealtimeElement extends HTMLElement {
       font-size: 14px;
     }
 
-    .log, #transcript {
-      max-height: 6em;
-      overflow: auto;
-      font-size: 0.8em;
-      background: #eee;
-      padding: 4px;
-      margin-top: 10px;
+    /* Updated Transcript Box */
+    #transcript {
+      width: 450px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.6); /* 60% opacity */
+      color: #1010AD;
+      border: 2px solid #FFFFFF; /* White border */
+      border-radius: 20px; /* Rounded corners */
+      font-size: 14px;
+      font-family: "Wix Madefor Text", sans-serif;
+      box-shadow: 1px 1px 4px #FFFFFF; /* White shadow */
+      padding: 10px;
+      margin-top: 40px; /* Space below buttons */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      text-align: center;
     }
   </style>
 
   <div class="button-container">
-    <button id="connectBtn">Start Conversation</button>
     <div class="button-row">
-      <button id="muteBtn">Mute Conversation</button>
+      <button id="connectBtn">Start Conversation</button>
       <button id="cancelBtn">End Conversation</button>
     </div>
+    <div id="transcript">Transcript will appear here...</div>
   </div>
 
   <div id="err"></div>
-  <div class="log" id="logArea"></div>
-  <div id="transcript"></div>
 `;
     
     const connectBtn = this.shadowRoot.querySelector('#connectBtn');
